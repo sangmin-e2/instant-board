@@ -316,7 +316,7 @@ const App: React.FC = () => {
       />
 
       <footer className="py-8 text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-        &copy; 2025 INSTANT BOARD &bull; DRAG & DROP ENABLED
+        &copy; 2025 Sangmin's INSTANT BOARD &bull; DRAG & DROP ENABLED
       </footer>
     </div>
   );
