@@ -78,26 +78,29 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!boardId) return;
 
-    // 3초마다 보드 데이터를 가져와서 동기화
+    // 1.5초마다 보드 데이터를 가져와서 동기화 (더 빠른 동기화)
     const syncInterval = setInterval(() => {
       fetchNotes(boardId);
-    }, 3000);
+    }, 1500);
 
     return () => clearInterval(syncInterval);
   }, [boardId, fetchNotes]);
 
-  const saveToCloud = async (newNotes: Note[]) => {
-    if (!boardId) return;
+  const saveToCloud = async (newNotes: Note[]): Promise<boolean> => {
+    if (!boardId) return false;
     setSyncStatus('syncing');
     try {
       const success = await updateBoardNotes(boardId, newNotes);
       if (success) {
         setSyncStatus('synced');
+        return true;
       } else {
         setSyncStatus('error');
+        return false;
       }
     } catch (error) {
       setSyncStatus('error');
+      return false;
     }
   };
 
@@ -112,14 +115,24 @@ const App: React.FC = () => {
     };
     const updatedNotes = [newNote, ...notes];
     setNotes(updatedNotes);
-    saveToCloud(updatedNotes);
-  }, [notes, boardId]);
+    saveToCloud(updatedNotes).then(() => {
+      // 저장 후 즉시 동기화하여 다른 브라우저에 빠르게 반영
+      if (boardId) {
+        setTimeout(() => fetchNotes(boardId), 500);
+      }
+    });
+  }, [notes, boardId, fetchNotes]);
 
   const confirmDelete = () => {
     if (deletingNoteId) {
       const updatedNotes = notes.filter(note => note.id !== deletingNoteId);
       setNotes(updatedNotes);
-      saveToCloud(updatedNotes);
+      saveToCloud(updatedNotes).then(() => {
+        // 삭제 후 즉시 동기화하여 다른 브라우저에 빠르게 반영
+        if (boardId) {
+          setTimeout(() => fetchNotes(boardId), 500);
+        }
+      });
       setDeletingNoteId(null);
     }
   };
@@ -150,7 +163,12 @@ const App: React.FC = () => {
   const onDragEnd = () => {
     setDraggedItemIndex(null);
     // 드래그가 끝나면 최종 변경된 순서를 클라우드에 저장
-    saveToCloud(notes);
+    saveToCloud(notes).then(() => {
+      // 저장 후 즉시 동기화
+      if (boardId) {
+        setTimeout(() => fetchNotes(boardId), 500);
+      }
+    });
   };
   // ---------------------------
 
