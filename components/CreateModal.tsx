@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NoteColor, SECRET_PASSWORD } from '../types';
+import { NoteColor, getSecretPassword } from '../types';
 import { getSmartImprovement } from '../services/geminiService';
 
 interface CreateModalProps {
@@ -19,7 +19,7 @@ const CreateModal: React.FC<CreateModalProps> = ({ isOpen, onClose, onSave }) =>
   if (!isOpen) return null;
 
   const handleSave = () => {
-    if (password !== SECRET_PASSWORD) {
+    if (password !== getSecretPassword()) {
       setError('Invalid password. Access denied.');
       return;
     }

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SECRET_PASSWORD } from '../types';
+import { getSecretPassword } from '../types';
 
 interface DeleteModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({ isOpen, onClose, onConfirm })
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (password === SECRET_PASSWORD) {
+    if (password === getSecretPassword()) {
       onConfirm();
       setPassword('');
       setError(false);

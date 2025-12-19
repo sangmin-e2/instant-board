@@ -19,4 +19,7 @@ export const COLORS: Record<NoteColor, string> = {
   orange: 'bg-orange-100 border-orange-200 text-orange-900',
 };
 
-export const SECRET_PASSWORD = "1212";
+// 환경 변수에서 비밀번호 가져오기 (기본값: "1212")
+export const getSecretPassword = (): string => {
+  return import.meta.env.VITE_SECRET_PASSWORD || "1212";
+};
