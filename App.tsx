@@ -40,30 +40,24 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initializeBoard = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      let currentId = urlParams.get('b');
-
-      // URL에 보드 ID가 없으면 기본 공유 보드 사용 (모든 사용자가 같은 보드를 봄)
-      if (!currentId) {
-        try {
-          setSyncStatus('syncing');
-          // 기본 보드를 가져오거나 생성 (모든 사용자가 공유)
-          currentId = await getOrCreateDefaultBoard();
-          
-          if (currentId) {
-            // 기본 보드 ID를 URL에 추가 (공유 가능하도록)
-            window.history.replaceState(null, '', `?b=${currentId}`);
-          }
-        } catch (error) {
-          console.error("Failed to get default board:", error);
+      // URL 파라미터를 무시하고 항상 고정된 기본 보드만 사용
+      try {
+        setSyncStatus('syncing');
+        // 고정된 기본 보드를 가져오거나 생성 (모든 사용자가 항상 같은 보드만 사용)
+        const currentId = await getOrCreateDefaultBoard();
+        
+        if (currentId) {
+          // 고정된 보드 ID를 URL에 설정 (URL 파라미터 무시)
+          window.history.replaceState(null, '', `?b=${currentId}`);
+          setBoardId(currentId);
+          fetchNotes(currentId);
+        } else {
+          // Supabase 연결 실패 시에도 UI를 표시
+          setSyncStatus('error');
+          setIsLoaded(true);
         }
-      }
-
-      setBoardId(currentId);
-      if (currentId) {
-        fetchNotes(currentId);
-      } else {
-        // Supabase 연결 실패 시에도 UI를 표시
+      } catch (error) {
+        console.error("Failed to get default board:", error);
         setSyncStatus('error');
         setIsLoaded(true);
       }

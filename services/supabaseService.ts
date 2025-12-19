@@ -47,8 +47,9 @@ export const createBoard = async (): Promise<string | null> => {
 };
 
 /**
- * 기본 보드를 가져오거나 생성합니다.
- * 모든 사용자가 공유하는 기본 보드를 반환합니다.
+ * 고정된 기본 보드를 가져오거나 생성합니다.
+ * 모든 사용자가 항상 같은 하나의 보드만 사용합니다.
+ * 새 보드는 첫 번째 보드가 없을 때만 생성됩니다.
  */
 export const getOrCreateDefaultBoard = async (): Promise<string | null> => {
   // Supabase 설정이 없으면 null 반환
@@ -58,26 +59,26 @@ export const getOrCreateDefaultBoard = async (): Promise<string | null> => {
   }
 
   try {
-    // 먼저 기존 보드 중 하나를 가져옴 (가장 최근에 업데이트된 것)
+    // 항상 첫 번째로 생성된 보드를 가져옴 (created_at 기준 오름차순)
     const { data: existingBoards, error: fetchError } = await supabase
       .from('boards')
       .select('id')
-      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: true })
       .limit(1);
 
     if (fetchError) throw fetchError;
 
-    // 기존 보드가 있으면 첫 번째 보드 ID 반환
+    // 기존 보드가 있으면 첫 번째 보드 ID 반환 (항상 같은 보드)
     if (existingBoards && existingBoards.length > 0) {
       return existingBoards[0].id;
     }
 
-    // 기존 보드가 없으면 새로 생성
+    // 기존 보드가 없을 때만 새로 생성 (최초 1회만)
+    console.log('No existing board found. Creating the first and only board...');
     return await createBoard();
   } catch (error) {
     console.error('Failed to get or create default board:', error);
-    // 에러 발생 시 새 보드 생성 시도
-    return await createBoard();
+    return null;
   }
 };
 
