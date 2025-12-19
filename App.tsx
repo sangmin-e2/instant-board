@@ -5,7 +5,7 @@ import StickyNote from './components/StickyNote';
 import CreateModal from './components/CreateModal';
 import DeleteModal from './components/DeleteModal';
 import DetailModal from './components/DetailModal';
-import { createBoard, fetchBoardNotes, updateBoardNotes } from './services/supabaseService';
+import { createBoard, fetchBoardNotes, updateBoardNotes, getOrCreateDefaultBoard } from './services/supabaseService';
 
 const App: React.FC = () => {
   console.log('App: Component rendering...');
@@ -43,18 +43,19 @@ const App: React.FC = () => {
       const urlParams = new URLSearchParams(window.location.search);
       let currentId = urlParams.get('b');
 
-      // URL에 보드 ID가 없으면 새 보드 생성 (공유 보드를 위해 localStorage 사용 안 함)
+      // URL에 보드 ID가 없으면 기본 공유 보드 사용 (모든 사용자가 같은 보드를 봄)
       if (!currentId) {
         try {
           setSyncStatus('syncing');
-          currentId = await createBoard();
+          // 기본 보드를 가져오거나 생성 (모든 사용자가 공유)
+          currentId = await getOrCreateDefaultBoard();
           
           if (currentId) {
-            // 새 보드 생성 시 URL에 추가 (공유 가능하도록)
+            // 기본 보드 ID를 URL에 추가 (공유 가능하도록)
             window.history.replaceState(null, '', `?b=${currentId}`);
           }
         } catch (error) {
-          console.error("Failed to create new board:", error);
+          console.error("Failed to get default board:", error);
         }
       }
 
