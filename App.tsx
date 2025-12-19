@@ -201,7 +201,7 @@ const App: React.FC = () => {
             I
           </div>
           <div>
-            <h1 className="marker-font text-xl md:text-2xl font-bold text-gray-800 leading-none">INSTANT BOARD</h1>
+            <h1 className="marker-font text-xl md:text-2xl font-bold text-gray-800 leading-none">Sangmin's INSTANT BOARD</h1>
             <p className="text-[9px] md:text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-0.5 md:mt-1">By Sangmin</p>
           </div>
         </div>
