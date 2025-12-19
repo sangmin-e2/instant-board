@@ -28,21 +28,18 @@ const App: React.FC = () => {
       const urlParams = new URLSearchParams(window.location.search);
       let currentId = urlParams.get('b');
 
+      // URL에 보드 ID가 없으면 새 보드 생성 (공유 보드를 위해 localStorage 사용 안 함)
       if (!currentId) {
-        currentId = localStorage.getItem('last_board_id');
-        
-        if (!currentId) {
-          try {
-            setSyncStatus('syncing');
-            currentId = await createBoard();
-          } catch (error) {
-            console.error("Failed to create new board:", error);
+        try {
+          setSyncStatus('syncing');
+          currentId = await createBoard();
+          
+          if (currentId) {
+            // 새 보드 생성 시 URL에 추가 (공유 가능하도록)
+            window.history.replaceState(null, '', `?b=${currentId}`);
           }
-        }
-
-        if (currentId) {
-          localStorage.setItem('last_board_id', currentId);
-          window.history.replaceState(null, '', `?b=${currentId}`);
+        } catch (error) {
+          console.error("Failed to create new board:", error);
         }
       }
 
@@ -60,9 +57,9 @@ const App: React.FC = () => {
       initializeBoard();
       initialFetchDone.current = true;
     }
-  }, []);
+  }, [fetchNotes]);
 
-  const fetchNotes = async (id: string) => {
+  const fetchNotes = useCallback(async (id: string) => {
     setSyncStatus('syncing');
     try {
       const fetchedNotes = await fetchBoardNotes(id);
@@ -74,7 +71,19 @@ const App: React.FC = () => {
     } finally {
       setIsLoaded(true);
     }
-  };
+  }, []);
+
+  // 주기적으로 보드 데이터를 동기화 (다른 사용자의 변경사항 감지)
+  useEffect(() => {
+    if (!boardId) return;
+
+    // 3초마다 보드 데이터를 가져와서 동기화
+    const syncInterval = setInterval(() => {
+      fetchNotes(boardId);
+    }, 3000);
+
+    return () => clearInterval(syncInterval);
+  }, [boardId, fetchNotes]);
 
   const saveToCloud = async (newNotes: Note[]) => {
     if (!boardId) return;
