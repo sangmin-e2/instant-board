@@ -75,17 +75,7 @@ const App: React.FC = () => {
     }
   }, [fetchNotes]);
 
-  // 주기적으로 보드 데이터를 동기화 (다른 사용자의 변경사항 감지)
-  useEffect(() => {
-    if (!boardId) return;
-
-    // 1.5초마다 보드 데이터를 가져와서 동기화 (더 빠른 동기화)
-    const syncInterval = setInterval(() => {
-      fetchNotes(boardId);
-    }, 1500);
-
-    return () => clearInterval(syncInterval);
-  }, [boardId, fetchNotes]);
+  // 자동 동기화 제거 - 수동 동기화 버튼 사용
 
   const saveToCloud = async (newNotes: Note[]): Promise<boolean> => {
     if (!boardId) return false;
@@ -128,12 +118,8 @@ const App: React.FC = () => {
     if (deletingNoteId) {
       const updatedNotes = notes.filter(note => note.id !== deletingNoteId);
       setNotes(updatedNotes);
-      saveToCloud(updatedNotes).then(() => {
-        // 삭제 후 즉시 동기화하여 다른 브라우저에 빠르게 반영
-        if (boardId) {
-          setTimeout(() => fetchNotes(boardId), 500);
-        }
-      });
+      saveToCloud(updatedNotes);
+      // 수동 동기화로 변경 - 자동 동기화 제거
       setDeletingNoteId(null);
     }
   };
@@ -141,6 +127,12 @@ const App: React.FC = () => {
   const copyShareLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('보드 공유 링크가 복사되었습니다!');
+  };
+
+  const handleManualSync = () => {
+    if (boardId) {
+      fetchNotes(boardId);
+    }
   };
 
   // --- 드래그 앤 드롭 핸들러 ---
@@ -164,12 +156,8 @@ const App: React.FC = () => {
   const onDragEnd = () => {
     setDraggedItemIndex(null);
     // 드래그가 끝나면 최종 변경된 순서를 클라우드에 저장
-    saveToCloud(notes).then(() => {
-      // 저장 후 즉시 동기화
-      if (boardId) {
-        setTimeout(() => fetchNotes(boardId), 500);
-      }
-    });
+    saveToCloud(notes);
+    // 수동 동기화로 변경 - 자동 동기화 제거
   };
   // ---------------------------
 
@@ -233,6 +221,28 @@ const App: React.FC = () => {
               {syncStatus === 'synced' ? 'Cloud Synced' : syncStatus === 'syncing' ? 'Syncing...' : 'Offline'}
             </span>
           </div>
+          
+          <button 
+            onClick={handleManualSync}
+            disabled={syncStatus === 'syncing' || !boardId}
+            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors text-xs font-bold uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed"
+            title="동기화 (새로고침)"
+          >
+            <svg 
+              width="14" 
+              height="14" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              className={syncStatus === 'syncing' ? 'animate-spin' : ''}
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+            </svg>
+            <span className="hidden xs:inline">{syncStatus === 'syncing' ? 'Syncing...' : 'Sync'}</span>
+          </button>
           
           <button 
             onClick={copyShareLink}
