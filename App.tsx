@@ -23,6 +23,21 @@ const App: React.FC = () => {
 
   const initialFetchDone = useRef(false);
 
+  // fetchNotes를 먼저 정의 (useEffect보다 앞에)
+  const fetchNotes = useCallback(async (id: string) => {
+    setSyncStatus('syncing');
+    try {
+      const fetchedNotes = await fetchBoardNotes(id);
+      setNotes(fetchedNotes);
+      setSyncStatus('synced');
+    } catch (error) {
+      console.error("Sync error:", error);
+      setSyncStatus('error');
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
   useEffect(() => {
     const initializeBoard = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -58,20 +73,6 @@ const App: React.FC = () => {
       initialFetchDone.current = true;
     }
   }, [fetchNotes]);
-
-  const fetchNotes = useCallback(async (id: string) => {
-    setSyncStatus('syncing');
-    try {
-      const fetchedNotes = await fetchBoardNotes(id);
-      setNotes(fetchedNotes);
-      setSyncStatus('synced');
-    } catch (error) {
-      console.error("Sync error:", error);
-      setSyncStatus('error');
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
 
   // 주기적으로 보드 데이터를 동기화 (다른 사용자의 변경사항 감지)
   useEffect(() => {
