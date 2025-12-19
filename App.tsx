@@ -106,13 +106,9 @@ const App: React.FC = () => {
     };
     const updatedNotes = [newNote, ...notes];
     setNotes(updatedNotes);
-    saveToCloud(updatedNotes).then(() => {
-      // 저장 후 즉시 동기화하여 다른 브라우저에 빠르게 반영
-      if (boardId) {
-        setTimeout(() => fetchNotes(boardId), 500);
-      }
-    });
-  }, [notes, boardId, fetchNotes]);
+    saveToCloud(updatedNotes);
+    // 수동 동기화로 변경 - 자동 동기화 제거
+  }, [notes, boardId]);
 
   const confirmDelete = () => {
     if (deletingNoteId) {
